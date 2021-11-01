@@ -1,9 +1,6 @@
 package com.example.roomdemo
 
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import androidx.room.Delete
 import com.example.roomdemo.db.Subscriber
 import com.example.roomdemo.db.SubscriberRepository
@@ -23,6 +20,12 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
 
     val saveOrUpdateButtonText = MutableLiveData<String>()
     val clearAllOrDeleteButtonTexxt = MutableLiveData<String>()
+
+    private val statusMessage = MutableLiveData<Event<String>>()
+
+    val message : LiveData<Event<String>>
+        get() = statusMessage
+
 
     init {
         // When user click the button change text dynamically.
@@ -53,10 +56,18 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
 
     fun insert(subscriber: Subscriber) = viewModelScope.launch {
             repository.insert(subscriber)
+            statusMessage.value = Event("Subscriber Inserted Successfully.")
     }
 
     fun update(subscriber: Subscriber) = viewModelScope.launch {
         repository.update(subscriber)
+        inputName.value = subscriber.name
+        inputEmail.value = subscriber.email
+        isUpdateOrDelete = false
+        subscriberToUpdateOrDelete = subscriber
+        saveOrUpdateButtonText.value = "Save"
+        clearAllOrDeleteButtonTexxt.value = "ClearAll"
+        statusMessage.value = Event("Subscriber Updated Successfully.")
     }
 
     fun delete(subscriber: Subscriber) = viewModelScope.launch {
@@ -67,10 +78,12 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
         subscriberToUpdateOrDelete = subscriber
         saveOrUpdateButtonText.value = "Save"
         clearAllOrDeleteButtonTexxt.value = "ClearAll"
+        statusMessage.value = Event("Subscriber Deleted Successfully.")
     }
 
     fun clearAll() = viewModelScope.launch {
         repository.deleteAll()
+        statusMessage.value = Event("All Subscriber Deleted Successfully.")
     }
 
     fun initUpdateAndDelete(subscriber: Subscriber) { // Pass Selected Subscriber's Instance
