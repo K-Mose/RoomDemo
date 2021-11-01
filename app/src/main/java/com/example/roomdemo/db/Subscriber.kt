@@ -15,9 +15,9 @@ data class Subscriber (
     @PrimaryKey(autoGenerate = true)
     //@ColumnInfo column 이름과 응답할 수 있게 설정
     @ColumnInfo(name = "subscriber_id")
-    val id: Int,
+    var id: Int,
     @ColumnInfo(name = "subscriber_name")
-    val name: String,
+    var name: String,
     @ColumnInfo(name = "subscriber_email")
-    val email: String
+    var email: String
 )
