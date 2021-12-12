@@ -1,5 +1,6 @@
 package com.example.roomdemo
 
+import android.util.Patterns
 import androidx.lifecycle.*
 import androidx.room.Delete
 import com.example.roomdemo.db.Subscriber
@@ -34,16 +35,25 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
     }
 
     fun saveOrUpdate() {
-        if(isUpdateOrDelete) {
-            subscriberToUpdateOrDelete.name = inputName.value!!
-            subscriberToUpdateOrDelete.email = inputEmail.value!!
-            update(subscriberToUpdateOrDelete)
+        if (inputName.value.isNullOrEmpty()) {
+            statusMessage.value =  Event("Please enter subscriber's name")
+        } else if (inputEmail.value.isNullOrEmpty()) {
+            statusMessage.value =  Event("Please enter subscriber's email")
+        } else if(Patterns.EMAIL_ADDRESS.matcher(inputEmail.value!!).matches()) {
+            statusMessage.value =  Event("Please enter a correct email address")
         } else {
-            val name = inputName.value!!
-            val email = inputEmail.value!!
-            insert(Subscriber(0, name, email))
-            inputName.value = null
-            inputEmail.value = null
+            if(isUpdateOrDelete) {
+                subscriberToUpdateOrDelete.name = inputName.value!!
+                subscriberToUpdateOrDelete.email = inputEmail.value!!
+
+                update(subscriberToUpdateOrDelete)
+            } else {
+                val name = inputName.value!!
+                val email = inputEmail.value!!
+                insert(Subscriber(0, name, email))
+                    inputName.value = null
+                    inputEmail.value = null
+            }
         }
     }
 
@@ -73,6 +83,8 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
             saveOrUpdateButtonText.value = "Save"
             clearAllOrDeleteButtonText.value = "ClearAll"
             statusMessage.value = Event("$noOfRows Updated Successfully.")
+            inputName.value = null
+            inputEmail.value = null
         } else {
             statusMessage.value = Event("Error Occurred.")
         }
