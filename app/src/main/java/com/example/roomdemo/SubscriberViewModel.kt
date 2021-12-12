@@ -19,7 +19,7 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
     val inputEmail = MutableLiveData<String?>()
 
     val saveOrUpdateButtonText = MutableLiveData<String>()
-    val clearAllOrDeleteButtonTexxt = MutableLiveData<String>()
+    val clearAllOrDeleteButtonText = MutableLiveData<String>()
 
     private val statusMessage = MutableLiveData<Event<String>>()
 
@@ -30,7 +30,7 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
     init {
         // When user click the button change text dynamically.
         saveOrUpdateButtonText.value = "Save"
-        clearAllOrDeleteButtonTexxt.value = "ClearAll"
+        clearAllOrDeleteButtonText.value = "ClearAll"
     }
 
     fun saveOrUpdate() {
@@ -55,35 +55,51 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
     }
 
     fun insert(subscriber: Subscriber) = viewModelScope.launch {
-            repository.insert(subscriber)
-            statusMessage.value = Event("Subscriber Inserted Successfully.")
+        val newRowId : Long = repository.insert(subscriber)
+        if (newRowId > -1) {
+            statusMessage.value = Event("Subscriber Inserted Successfully. $newRowId")
+        } else {
+            statusMessage.value = Event("Error Occurred")
+        }
     }
 
     fun update(subscriber: Subscriber) = viewModelScope.launch {
-        repository.update(subscriber)
-        inputName.value = subscriber.name
-        inputEmail.value = subscriber.email
-        isUpdateOrDelete = false
-        subscriberToUpdateOrDelete = subscriber
-        saveOrUpdateButtonText.value = "Save"
-        clearAllOrDeleteButtonTexxt.value = "ClearAll"
-        statusMessage.value = Event("Subscriber Updated Successfully.")
+        val noOfRows = repository.update(subscriber)
+        if (noOfRows > 0) {
+            inputName.value = subscriber.name
+            inputEmail.value = subscriber.email
+            isUpdateOrDelete = false
+            subscriberToUpdateOrDelete = subscriber
+            saveOrUpdateButtonText.value = "Save"
+            clearAllOrDeleteButtonText.value = "ClearAll"
+            statusMessage.value = Event("$noOfRows Updated Successfully.")
+        } else {
+            statusMessage.value = Event("Error Occurred.")
+        }
     }
 
     fun delete(subscriber: Subscriber) = viewModelScope.launch {
-        repository.delete(subscriber)
-        inputName.value = null
-        inputEmail.value = null
-        isUpdateOrDelete = false
-        subscriberToUpdateOrDelete = subscriber
-        saveOrUpdateButtonText.value = "Save"
-        clearAllOrDeleteButtonTexxt.value = "ClearAll"
-        statusMessage.value = Event("Subscriber Deleted Successfully.")
+        val noOfRowsDeleted = repository.delete(subscriber)
+        if(noOfRowsDeleted > 0) {
+            inputName.value = null
+            inputEmail.value = null
+            isUpdateOrDelete = false
+            subscriberToUpdateOrDelete = subscriber
+            saveOrUpdateButtonText.value = "Save"
+            clearAllOrDeleteButtonText.value = "ClearAll"
+            statusMessage.value = Event("$noOfRowsDeleted Subscriber Deleted Successfully.")
+        } else {
+            statusMessage.value = Event("Error Occurred")
+        }
     }
 
     fun clearAll() = viewModelScope.launch {
-        repository.deleteAll()
-        statusMessage.value = Event("All Subscriber Deleted Successfully.")
+        val noOfRowDeleted = repository.deleteAll()
+        if (noOfRowDeleted > 0) {
+            statusMessage.value = Event("$noOfRowDeleted Subscriber Deleted Successfully.")
+        } else {
+            statusMessage.value = Event("Error Occurred")
+        }
     }
 
     fun initUpdateAndDelete(subscriber: Subscriber) { // Pass Selected Subscriber's Instance
@@ -93,7 +109,7 @@ class SubscriberViewModel(private val repository: SubscriberRepository) : ViewMo
         subscriberToUpdateOrDelete = subscriber
         // change buttons text
         saveOrUpdateButtonText.value = "Update"
-        clearAllOrDeleteButtonTexxt.value = "Delete"
+        clearAllOrDeleteButtonText.value = "Delete"
     }
 
     //

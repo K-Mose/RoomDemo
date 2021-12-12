@@ -15,16 +15,16 @@ Room은 main thread에서 db 접근을 허용하지 않는다.
 */
 
     @Insert // Room libray은 함수 이름이 아닌 annotation을 읽고 Insert 기능이라 알아차린다.
-    suspend fun insertSubscriber(subscriber: Subscriber): Long
+    suspend fun insertSubscriber(subscriber: Subscriber): Long // 변경된 rowId 반환
 
     @Update
-    suspend fun updateSubscriber(subscriber: Subscriber)
+    suspend fun updateSubscriber(subscriber: Subscriber) : Int
 
     @Delete
-    suspend fun deleteSubscriber(subscriber: Subscriber)
+    suspend fun deleteSubscriber(subscriber: Subscriber) : Int // 삭제된 Row의 수
 
     @Query("DELETE FROM subscriber_data_table") // complie time에서 verify되어서 Room에게 db가 작동된다는 것을 확신시킨다. runtime시 query 에러가 일어나지 않는다.
-    suspend fun deleteAll()
+    suspend fun deleteAll() : Int
 
     /*
     LiveData to Flow - https://kotlinlang.org/docs/flow.html#flows
