@@ -50,3 +50,136 @@ Room의 세가지 주요 구성요소
   fun getAllSubscribers():Flow<List<Subscriber>>
 ```
 
+## Structure 
+```
+RoomDemo
+└─ app
+   └─ src
+      └─ main
+         ├─ AndroidManifest.xml
+         └─ java
+            └─ com
+               └─ example
+                  └─ roomdemo
+                     ├─ db
+                     │  ├─ Subscriber.kt
+                     │  ├─ SubscriberDAO.kt
+                     │  ├─ SubscriberDatabase.kt
+                     │  ├─ SubscriberRepository.kt
+                     │  └─ SubscribersViewModelFactory.kt
+                     ├─ Event.kt
+                     ├─ MainActivity.kt
+                     ├─ MyRecyclerViewAdapter.kt
+                     └─ SubscriberViewModel.kt
+```
+### Entity 
+```
+@Entity(tableName = "subscriber_data_table")
+data class Subscriber (
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "subscriber_id")
+    var id: Int,
+    @ColumnInfo(name = "subscriber_name")
+    var name: String,
+    @ColumnInfo(name = "subscriber_email")
+    var email: String
+)
+```
+Entity 는 kotlin <a href="https://kotlinlang.org/docs/data-classes.html#properties-declared-in-the-class-body">data class</a>로 작성합니다. 
+
+### DAO - Data Access Object
+```
+@Dao
+interface SubscriberDAO {
+    @Insert
+    suspend fun insertSubscriber(subscriber: Subscriber): Long 
+
+    @Update
+    suspend fun updateSubscriber(subscriber: Subscriber) : Int
+
+    @Delete
+    suspend fun deleteSubscriber(subscriber: Subscriber) : Int 
+
+    @Query("DELETE FROM subscriber_data_table")
+    suspend fun deleteAll() : Int
+    
+    @Query("SELECT * FROM subscriber_data_table")
+    fun getAllSubscribers():Flow<List<Subscriber>> 
+}
+```
+SQLite에서는 CRUD를 위해서 ContentValues나 Cursor를 사용하여 장황하게 데이터 테이블에 접근하였지만, 여기선 간단히 @Insert, @Update, @Delete, @Query 어노테이션만으로 모든 작업이 가능합니다. Room은 내부적으로 Insert, Update, Delete에 대한 코드가 존재하지만 나머지 쿼리에 대해서는 @Query 어노테이션을 사용해서 추가해줘야 합니다. 
+
+#### Repository - for MVVM 
+해당 프로젝트가 MVVM Clean Architecture를 위한 단계 중 하나이므로 데이터에 접근 할 수 있는 Repository 클래스를 만듭니다.
+```
+class SubscriberRepository(private val dao: SubscriberDAO) {
+    val subscribers = dao.getAllSubscribers()
+
+    suspend fun insert(subscriber: Subscriber) : Long {
+        return dao.insertSubscriber(subscriber)
+    }
+
+    suspend fun update(subscriber: Subscriber) : Int {
+        return dao.updateSubscriber(subscriber)
+    }
+
+    suspend fun delete(subscriber: Subscriber) : Int {
+        return dao.deleteSubscriber(subscriber)
+    }
+
+    suspend fun deleteAll() : Int {
+        return dao.deleteAll()
+    }
+}
+```
+Repository는 ViewModel에게 데이터를 CRUD 하기 쉽게 clean API를 제공합니다. <br>
+Repository에 접근은 ViewModel 클래스를 만들어서 접근합니다. 자세한 내용은 ViewModel은 <a href="https://github.com/K-Mose/TwoWayDataBinding#viewmodel">여기</a> MVVM Clean Architecture는 <a href="https://github.com/K-Mose/TMDBClient---MVVM-with-Clean-Architecture#android-mvvm-pattern">여기</a>를 확인하세요.
+
+
+### Database - Make Room for Data
+```
+@Database(entities = [Subscriber::class], version = 1)
+abstract class SubscriberDatabase : RoomDatabase() {
+    abstract val subscriberDAO: SubscriberDAO
+    companion object {
+        @Volatile
+        private var INSTANCE: SubscriberDatabase? = null
+        fun getInstance(context: Context): SubscriberDatabase {
+            synchronized(this) {
+                var instance = INSTANCE
+                if (instance == null) {
+                    instance = Room.databaseBuilder(
+                        context.applicationContext,
+                        SubscriberDatabase::class.java,
+                        "subscriber_data_base"
+                    ).build()
+                }
+                return instance
+            }
+        }
+    }
+}
+```
+DB객체는 하나로 관리하기 위해 싱글톤으로 생성하고, 비동기식으로 접근되어지는 공유 자원의 동기화를 위해 synchronized를 사용합니다. 
+INSTANCE에 @Volatile 어노테이션을 적용하여 해당 필드가 다른 스레드에 보이도록 하고, 인스턴스의 생성은 Room의 databaseBuilder 함수를 이용하여 생성합니다. 
+
+
+## Preview
+
+
+## Dependencies
+ROOM -
+* androidx.room:room-runtime:2.3.0
+* androidx.room:room-ktx:2.3.0
+* androidx.room:room-compiler:2.3.0
+
+LiveData & ViewModel - 
+* androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.0
+* androidx.lifecycle:lifecycle-livedata-ktx:2.3.0
+* androidx.lifecycle:lifecycle-compiler:2.3.0
+
+
+## Ref.
+https://developer.android.com/training/data-storage/room
+https://medium.com/mindorks/using-room-database-android-jetpack-675a89a0e942
+https://johncodeos.com/how-to-use-room-in-android-using-kotlin/
