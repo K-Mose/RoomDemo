@@ -166,6 +166,12 @@ INSTANCE에 @Volatile 어노테이션을 적용하여 해당 필드가 다른 �
 
 ## Preview
 
+<div>
+<img src="https://user-images.githubusercontent.com/55622345/161080992-9513ff86-5ee3-4646-9ed6-1c2ef5ab9948.gif" width="300px"/>
+<img src="https://user-images.githubusercontent.com/55622345/161078795-c3d0346b-636e-49bd-8b41-0bd0e3fa3f42.gif" width="300px"/>
+<img src="https://user-images.githubusercontent.com/55622345/161078811-f0c6f88a-0e1b-4a8b-aa83-422c1bd0bf3d.gif" width="300px"/>
+</div>
+
 
 ## Dependencies
 ROOM -
